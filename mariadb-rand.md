@@ -226,7 +226,7 @@ set de seeds op elke thread
 vraag rand() op in applicatie
 
 
-relatistic seed:
+relatistic seed: realistic
 seed1=140740522780686, seed2=4175270791
 
 
@@ -282,6 +282,9 @@ Questions:
 - The probability of repeating itself is still pretty low. Would this pose a problem in actual use?
 - When picking a random row from a table with 2400 rows, the behaviour becomes less random. Why 2400? How much less random? How can I quantify how much this behavior differs from a random distribution? What are the implications of this?
 - Are the numbers (especially the probabilities I mention) in my draft correct?
+- Should seed1 and seed2 be relative prime for better random numbers?
+
+# Formula's
 
 0 (7, 11)
 1 (32, 76)
@@ -385,8 +388,137 @@ A(n) = 5 * A(n-1) + 2 * A(n-2) - 1
 
 924 = 5 * 198 - 3 * 33 + 33
 198 = 5 * 33 - 3 * 0 + 33
+33 = 5 * 0 - 3 * 0 + 33
+0 = 
 
  = 5 * 924 - 3 * 198 + 33
 
 A(n) = 5A(n-1) - 3A(n-2)
 
+## seed2
+
+a
+3
+15 = 12 + 3
+66 = 51 + 15
+285 = 219 + 66
+
+a = seed1[n] + seed2[n-1] = sum(seed1)
+
+b
+2
+7 = 5 + 2
+29 = 22 + 7
+124 = 95 + 29
+
+b = seed1[n] + seed2[n-1]
+
+c
+33
+99 = 3 * 33
+330 = 198 + 99 + 33
+1287 = 924 + 330 + 33
+
+# Repititions
+
+seed1[960] = 
+790318992 * seed1[0] + 887414990 * seed2[0] + 797133876 = 30 (mod 0x3FFFFFFF)
+790318992 * seed1[0] + 887414990 * seed2[0] = 276607977 (mod 0x3FFFFFFF)
+
+790318992 * seed1 + 887414990 * seed2 + 797133876 = seed1 (mod 0x3FFFFFFF)
+790318991 * seed1 + 887414990 * seed2 + 797133876 = 0
+887414990 * seed2 = -797133876 - 790318991 * seed1
+790318991 * seed1 + 4774 * (185885 * seed2 + 166974) = 0
+
+Repeat after 91199? (+1)
+seed1[91200] = 332322915 * seed1[0] + 214460015 * seed2[0] + 33520641 = 304929732 (mod 0x3FFFFFFF)
+91200 yes very much repetition
+
+6467? (+1)
+seed1[6468] = 441184836 * seed1[0] + 296541905 * seed2[0] + 356042940 = 858234585 (mod 0x3FFFFFFF)
+Not really
+
+1824?
+no rep
+seed1[1824] = 558034464 * seed1[0] + 292314407 * seed2[0] + 196128240 = 475283496 (mod 0x3FFFFFFF)
+
+4800?
+some rep
+
+91200
+332322915 * seed1[0] + 214460015 * seed2[0] + 33520641 = 304929732 (mod 0x3FFFFFFF)
+
+536870911
+
+
+a1 = a0 * 3 + b0
+b1 = a1 + b0 + 33
+
+
+
+## repeat 91200
+
+332322915 * seed1 + 214460015 * seed2 + 33520641 = seed1 (mod 0x3FFFFFFF)
+332322914 * seed1 + 214460015 * seed2 + 33520641 = 0 (mod 0x3FFFFFFF)
+214460015 * i mod 0x3FFFFFFF generates only 2979 different values
+gcd(214460015, 0x3FFFFFFF) = 360437
+gcd(332322914, 0x3FFFFFFF) = 360437
+0x3FFFFFFF / 360437 = 2979
+it generates 0 in 1/2979 cases
+it generates 1040221182 = -33520641
+
+332322914 * seed1 + 214460015 * seed2 + 33520641 = 0 (mod 0x3FFFFFFF)
+360437 * (922 * seed1 + 595 seed2 + 93) = 0 (mod 0x3FFFFFFF)
+922 * seed1 + 595 seed2 + 93 = 0 (mod 2979)
+this has 2979 solutions for seed1, seed2 between 0 and 2979
+so chance of repetition is 1/2979
+= 335 in 1e6
+repeat.py confirms approximately
+
+## repeat 960
+
+repeat 960:
+gcd = 2387
+0x3FFFFFFF / 2387 = 449829
+probability: 1/449829
+
+
+seed1[960] = 790318992 * seed1[0] + 887414990 * seed2[0] + 797133876 = 1058546188 (mod 0x3FFFFFFF)
+790318992 * seed1 + 887414990 * seed2 + 797133876 = seed1 (mod 0x3FFFFFFF)
+790318991 * seed1 + 887414990 * seed2 + 797133876 = 0 (mod 0x3FFFFFFF)
+2387 * (331093 * seed1 + 371770 * seed2 + 333948) = 0 (mod 0x3FFFFFFF)
+
+## repeat 4800
+
+also 2387
+
+# ditribution
+
+➜  mariadb cat lowest_check.txt| sort -n | uniq -c | sort -n | awk '{print $1}' | uniq -c | sort -nk2 > prob_check.txt
+➜  mariadb cat lowest.txt| sort -n | uniq -c | sort -n | awk '{print $1}' | uniq -c | sort -nk2 > prob.txt
+
+when reseeding, no skewed distribution
+
+# Modulo
+
+% 0x3FFFFFFF is probably a mistake
+& 0x3FFFFFFF would make sense, % 0x40000000 would make sense.
+
+# Period
+
+seed1 = seed1 * 3 + seed2
+seed2 = seed1 + seed2 + 33
+
+f(n)=(1/26) * ((39 - 9 * sqrt(13)) * ((1/2) * (5 - sqrt(13)))^n + 3 * (13 + 3 * sqrt(13)) * ((1/2) * (5 + sqrt(13)))^n) (mod 1073741823)
+f(n)=(1/26)*((39-9*sqrt(13))*((1/2)*(5-sqrt(13)))^n+3*(13+3*sqrt(13))*((1/2)*(5+sqrt(13)))^n)
+
+f(-1) = 1
+
+https://stackoverflow.com/questions/15766420/mysql-rand-how-often-can-it-be-used-does-it-use-dev-random
+
+
+((1 / 26)
+        * (
+            (39 - 9 * sqrt(13)) * ((1 / 2) * (5 - sqrt(13))) ** n
+            + 3 * (13 + 3 * sqrt(13)) * ((1 / 2) * (5 + sqrt(13))) ** n
+        ) % 27917287398)
