@@ -522,3 +522,46 @@ https://stackoverflow.com/questions/15766420/mysql-rand-how-often-can-it-be-used
             (39 - 9 * sqrt(13)) * ((1 / 2) * (5 - sqrt(13))) ** n
             + 3 * (13 + 3 * sqrt(13)) * ((1 / 2) * (5 + sqrt(13))) ** n
         ) % 27917287398)
+
+
+27755199 * 32537631 = 903088423393569 =~ 2^50
+27755200 * 32537631 = 903088455931200
+it doesn't generate any original seed
+
+seed1 = a1 * seed1 + b1 * seed2 + c1
+seed2 = a2 * seed1 + b2 * seed2 + c2
+
+a1 = 835132530
+b1 = 477218588
+c1 = 357913941
+
+a2 = 357913941
+b2 = 357913942
+c2 = 0
+
+seed1 = 835132530 * seed1 + 477218588 * seed2 + 357913941 mod 0x3FFFFFFF
+seed2 = 357913941 * seed1 + 357913942 * seed2 + 0 mod 0x3FFFFFFF
+
+identical to gcd-factors.txt
+repeat after 9 of 1/9 gcds?
+every 83265600 occurances
+9 * 83265600 = 749390400 =~ 2^29
+
+seed1[83265600] = 835132530 * seed1 + 477218588 * seed2 + 357913941 = 715827889 (mod 0x3FFFFFFF) (gcd 119304647)
+
+period of 83265600?
+yes =~ 2^26
+
+# Backwards
+
+What if we calculate seed[83265599]? That's one before seed[0].
+83265599 is prime.
+
+seed1[83265599] = (795364314 * seed1 + 914668960 * seed2 + 238609305) % 0x3FFFFFFF
+seed2[83265599] = (596523234 * seed1 + 954437177 * seed2 + 715827849) % 0x3FFFFFFF
+
+70410564, 420399518
+
+0: 799440745, 777729716
+83265599: 989545151, 1052030761
+Yes, works.
