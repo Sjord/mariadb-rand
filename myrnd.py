@@ -10,6 +10,16 @@ class Myrnd:
         self.seed2 = (self.seed1 + self.seed2 + 33) % self.max_value
         return self.seed1 / self.max_value
 
+    def reverse(self):
+        seed1 = (
+            795364314 * self.seed1 + 914668960 * self.seed2 + 238609305
+        ) % self.max_value
+        self.seed2 = (
+            596523234 * self.seed1 + 954437177 * self.seed2 + 715827849
+        ) % self.max_value
+        self.seed1 = seed1
+        return self.seed1 / self.max_value
+
 
 if __name__ == "__main__":
     m = Myrnd(0, 0)
@@ -50,3 +60,12 @@ if __name__ == "__main__":
 
     m = Myrnd(1073741790, 66)
     assert m.myrnd() == m.myrnd()
+
+    m = Myrnd(172, 281)
+    forward = [m.myrnd() for i in range(100)]
+    m.myrnd()
+    backward = [m.reverse() for i in range(100)]
+    m.reverse()
+    assert forward == list(reversed(backward))
+    assert m.seed1 == 172, m.seed1
+    assert m.seed2 == 281, m.seed2
